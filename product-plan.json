@@ -1,0 +1,148 @@
+{
+  "product": {
+    "name": "Inter-carrier Carbon Credit Trading Board MVP",
+    "client": "Hyundai Internal Procurement",
+    "objective": "Validate 1:1 trading intent cycle and manual state pipeline on shared board",
+    "design": {
+      "requirement": "Default ultra-basic functional UI, no custom design or polish in MVP",
+      "style": "pure_minimal_functional"
+    },
+    "roles": {
+      "carrier_user": {
+        "ui": "shared_board",
+        "permissions": ["write_post", "view_list", "declare_quantity_by_comment"]
+      },
+      "buyer_user": {
+        "ui": "shared_board",
+        "permissions": ["browse_sort_filter", "write_comment_declared_quantity"]
+      },
+      "super_admin": {
+        "ui": "shared_board",
+        "permissions": ["write_post", "edit_any_post", "delete_any_post"]
+      }
+    },
+    "data_schema": {
+      "carriers": ["id", "name", "email", "country_code", "phone_number", "company_name", "role"],
+      "posts": ["id", "post_number", "carrier_id", "quantity", "price_per_unit", "status_tag"],
+      "comments": ["id", "post_id", "carrier_id", "declared_quantity", "text", "comment_tag"]
+    },
+    "lifecycle": {
+      "post_tags": ["", "reserved", "in_trade", "canceled"],
+      "comment_tags": ["", "in_trade", "rejected"],
+      "transitions": {
+        "on_comment_submit": "post_tag_reserved",
+        "on_accept_trade": "post_tag_in_trade_and_comment_tag_in_trade",
+        "on_reject_trade": "comment_tag_rejected_and_post_tag_removed",
+        "quantity_edit": "manual_super_admin_only"
+      }
+    },
+    "flows": {
+      "write_post": {
+        "actor": "carrier_user_or_super_admin",
+        "ui_event": "open_modal_input(quantity_price_per_unit)_then_submit",
+        "result": "post_registered"
+      },
+      "browse_list": {
+        "actor": "buyer_user_or_any",
+        "ui_event": "view_posts_sort(latest)_filter(quantity_price)",
+        "result": "list_visible"
+      },
+      "declare_trade": {
+        "actor": "buyer_user",
+        "ui_event": "select_post_open_modal_input(declared_quantity)_submit_comment",
+        "result": "comment_created_and_post_tag_reserved"
+      },
+      "accept_trade": {
+        "actor": "post_writer",
+        "ui_event": "click_accept_confirm(Confirm_trade?)",
+        "popup": "sent_to_email_demo_popup",
+        "state_changes": {
+          "comment_tag": "in_trade",
+          "post_tag": "in_trade"
+        }
+      },
+      "reject_trade": {
+        "actor": "post_writer",
+        "ui_event": "click_reject_confirm(Confirm_reject?)",
+        "state_changes": {
+          "comment_tag": "rejected",
+          "post_tag": ""
+        }
+      }
+    },
+    "mvp_exclusions": [
+      "websocket_chat",
+      "auto_matching_algorithm",
+      "e_signature",
+      "erp_integrations",
+      "web_push_enhancements",
+      "notices_banners",
+      "auto_cs_timeout",
+      "ui_custom_design"
+    ],
+    "manual_policies": {
+      "quantity_changes": "manual_super_admin_edit_only",
+      "negotiation": "continue_comments_then_create_new_post",
+      "cs_timeout": "no_auto_management_mvp"
+    },
+    "dummy_users": [
+      {
+        "id": "carrier_001",
+        "first_name": "Min",
+        "last_name": "Han",
+        "email": "demo1@example.com",
+        "country_code": "+82",
+        "phone_number": "01011112222",
+        "company_name": "GlobalCarrier A",
+        "password": "1234",
+        "role": "carrier_user"
+      },
+      {
+        "id": "carrier_002",
+        "first_name": "Yuki",
+        "last_name": "Sato",
+        "email": "demo2@example.com",
+        "country_code": "+81",
+        "phone_number": "09022223333",
+        "company_name": "PacificCarrier B",
+        "password": "1234",
+        "role": "buyer_user"
+      },
+      {
+        "id": "carrier_003",
+        "first_name": "Liam",
+        "last_name": "Tran",
+        "email": "demo3@example.com",
+        "country_code": "+84",
+        "phone_number": "09133334444",
+        "company_name": "ChainCarrier C",
+        "password": "1234",
+        "role": "carrier_user"
+      },
+      {
+        "id": "carrier_004",
+        "first_name": "Sora",
+        "last_name": "Kim",
+        "email": "demo4@example.com",
+        "country_code": "+82",
+        "phone_number": "",
+        "company_name": "FuelCarrier D",
+        "password": "1234",
+        "role": "buyer_user"
+      },
+      {
+        "id": "admin_999",
+        "first_name": "System",
+        "last_name": "Admin",
+        "email": "admin@example.com",
+        "country_code": "+82",
+        "phone_number": "01099998888",
+        "company_name": "Carrier Admin",
+        "password": "admin",
+        "role": "super_admin"
+      }
+    ]
+  }
+}
+
+
