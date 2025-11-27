@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { getCommentsByPostId, getUserById, createComment, calculateRemainingQuantity, calculateReservedQuantity, getPostById } from '../data/store';
-import { Post, Comment } from '../types';
+import { Post, Comment, PostTag } from '../types';
 import CommentItem from './CommentItem';
 
 interface CommentModalProps {
@@ -16,7 +16,7 @@ const CommentModal: React.FC<CommentModalProps> = ({ post: initialPost, onClose,
   const [declaredQuantity, setDeclaredQuantity] = useState('');
   const [offeredPrice, setOfferedPrice] = useState('');
   const [text, setText] = useState('');
-  const [post, setPost] = useState<Post>(initialPost);
+  const [post, setPost] = useState<Post>(initialPost as Post);
 
   useEffect(() => {
     loadComments();
@@ -31,7 +31,7 @@ const CommentModal: React.FC<CommentModalProps> = ({ post: initialPost, onClose,
   const loadPost = () => {
     const updatedPost = getPostById(post.id);
     if (updatedPost) {
-      setPost(updatedPost);
+      setPost(updatedPost as Post);
     }
   };
 
@@ -158,10 +158,10 @@ const CommentModal: React.FC<CommentModalProps> = ({ post: initialPost, onClose,
       >
         <div style={{ marginBottom: '20px' }}>
           <h2>게시글</h2>
-          <div style={{ marginTop: '10px', padding: '10px', backgroundColor: post.status_tag === 'end_trade' ? '#e9ecef' : '#f5f5f5' }}>
+          <div style={{ marginTop: '10px', padding: '10px', backgroundColor: (post.status_tag as PostTag) === 'end_trade' ? '#e9ecef' : '#f5f5f5' }}>
             <div>작성자: {postWriter?.company_name} ({postWriter?.first_name} {postWriter?.last_name})</div>
             <div>수량 / 예약 중 수량 / 잔여 수량: {post.quantity.toLocaleString()} / {reservedQuantity.toLocaleString()} / {remainingQuantity.toLocaleString()}</div>
-            <div>단가: {post.status_tag === 'end_trade' ? '***' : `$${post.price_per_unit.toLocaleString()}`}</div>
+            <div>단가: {(post.status_tag as PostTag) === 'end_trade' ? '***' : `$${post.price_per_unit.toLocaleString()}`}</div>
             <div>등록 날짜: {formatDate(post.created_at)}</div>
             <div>상태: {post.status_tag || '대기'}</div>
           </div>
@@ -180,7 +180,7 @@ const CommentModal: React.FC<CommentModalProps> = ({ post: initialPost, onClose,
           ))}
         </div>
 
-        {user && post.status_tag !== 'end_trade' && (
+        {user && (post.status_tag as PostTag) !== 'end_trade' && (
           <form onSubmit={handleSubmit} style={{ borderTop: '1px solid #ccc', paddingTop: '20px' }}>
             <h3>거래 의도 선언</h3>
             
@@ -195,7 +195,7 @@ const CommentModal: React.FC<CommentModalProps> = ({ post: initialPost, onClose,
                   style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }}
                   placeholder="제안 가격을 입력하세요"
                 />
-                {offeredPrice && !isNaN(parseFloat(offeredPrice.replace(/,/g, ''))) && parseFloat(offeredPrice.replace(/,/g, '')) > 0 && post.status_tag !== 'end_trade' && (
+                {offeredPrice && !isNaN(parseFloat(offeredPrice.replace(/,/g, ''))) && parseFloat(offeredPrice.replace(/,/g, '')) > 0 && (post.status_tag as PostTag) !== 'end_trade' && (
                   <div style={{ marginTop: '5px', color: '#666', fontSize: '14px' }}>
                     게시글 가격: ${post.price_per_unit.toLocaleString()}
                   </div>
@@ -254,7 +254,7 @@ const CommentModal: React.FC<CommentModalProps> = ({ post: initialPost, onClose,
           </form>
         )}
 
-        {user && post.status_tag === 'end_trade' && (
+        {user && (post.status_tag as PostTag) === 'end_trade' && (
           <div style={{ borderTop: '1px solid #ccc', paddingTop: '20px', textAlign: 'right' }}>
             <div style={{ marginBottom: '15px', color: '#666' }}>
               거래가 종료되어 댓글을 작성할 수 없습니다.
