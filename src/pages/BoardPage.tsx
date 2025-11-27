@@ -13,6 +13,7 @@ const BoardPage: React.FC = () => {
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [showCommentModal, setShowCommentModal] = useState(false);
   const [sortBy, setSortBy] = useState<'latest' | 'quantity' | 'price'>('latest');
+  const [filterType, setFilterType] = useState<'all' | 'buy' | 'sell'>('all');
   const [filterQuantity, setFilterQuantity] = useState('');
   const [filterPrice, setFilterPrice] = useState('');
 
@@ -47,6 +48,11 @@ const BoardPage: React.FC = () => {
 
   const filteredAndSortedPosts = () => {
     let filtered = [...posts];
+
+    // 타입 필터
+    if (filterType !== 'all') {
+      filtered = filtered.filter(p => p.type === filterType);
+    }
 
     if (filterQuantity) {
       const qty = parseFloat(filterQuantity);
@@ -90,6 +96,45 @@ const BoardPage: React.FC = () => {
         >
           게시글 작성
         </button>
+        
+        <div style={{ display: 'flex', gap: '5px' }}>
+          <button
+            onClick={() => setFilterType('all')}
+            style={{ 
+              padding: '5px 15px', 
+              backgroundColor: filterType === 'all' ? '#007bff' : '#6c757d', 
+              color: 'white', 
+              border: 'none', 
+              cursor: 'pointer' 
+            }}
+          >
+            전체
+          </button>
+          <button
+            onClick={() => setFilterType('buy')}
+            style={{ 
+              padding: '5px 15px', 
+              backgroundColor: filterType === 'buy' ? '#007bff' : '#6c757d', 
+              color: 'white', 
+              border: 'none', 
+              cursor: 'pointer' 
+            }}
+          >
+            구매
+          </button>
+          <button
+            onClick={() => setFilterType('sell')}
+            style={{ 
+              padding: '5px 15px', 
+              backgroundColor: filterType === 'sell' ? '#007bff' : '#6c757d', 
+              color: 'white', 
+              border: 'none', 
+              cursor: 'pointer' 
+            }}
+          >
+            판매
+          </button>
+        </div>
         
         <label>
           정렬:

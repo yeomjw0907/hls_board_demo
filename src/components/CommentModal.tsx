@@ -14,6 +14,7 @@ const CommentModal: React.FC<CommentModalProps> = ({ post: initialPost, onClose,
   const { user } = useAuth();
   const [comments, setComments] = useState<Comment[]>([]);
   const [declaredQuantity, setDeclaredQuantity] = useState('');
+  const [offeredPrice, setOfferedPrice] = useState('');
   const [text, setText] = useState('');
   const [post, setPost] = useState<Post>(initialPost);
 
@@ -60,6 +61,15 @@ const CommentModal: React.FC<CommentModalProps> = ({ post: initialPost, onClose,
     return num.toLocaleString('en-US', { maximumFractionDigits: 2 });
   };
 
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // 쉼표를 제거한 숫자만 추출
+    const value = e.target.value.replace(/,/g, '');
+    // 숫자만 허용
+    if (value === '' || /^\d*\.?\d*$/.test(value)) {
+      setOfferedPrice(value);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -72,15 +82,30 @@ const CommentModal: React.FC<CommentModalProps> = ({ post: initialPost, onClose,
       return;
     }
 
-    const remainingQty = calculateRemainingQuantity(post.id);
-    // 잔여 수량보다 크면 안됨 (잔여 수량과 같을 때는 허용)
-    if (qty > remainingQty) {
-      alert(`선언 수량이 잔여 수량(${remainingQty.toLocaleString()})보다 클 수 없습니다.`);
-      return;
+    // SELL 게시글: 수량 체크
+    if (post.type === 'sell') {
+      const remainingQty = calculateRemainingQuantity(post.id);
+      // 잔여 수량보다 크면 안됨 (잔여 수량과 같을 때는 허용)
+      if (qty > remainingQty) {
+        alert(`선언 수량이 잔여 수량(${remainingQty.toLocaleString()})보다 클 수 없습니다.`);
+        return;
+      }
     }
 
-    createComment(post.id, user.id, qty, text);
+    // BUY 게시글: 가격 체크
+    let price: number | undefined = undefined;
+    if (post.type === 'buy') {
+      const priceValue = parseFloat(offeredPrice.replace(/,/g, ''));
+      if (isNaN(priceValue) || priceValue <= 0) {
+        alert('제안 가격은 0보다 큰 숫자여야 합니다.');
+        return;
+      }
+      price = priceValue;
+    }
+
+    createComment(post.id, user.id, qty, text, price);
     setDeclaredQuantity('');
+    setOfferedPrice('');
     setText('');
     loadComments();
     onSuccess();
@@ -136,7 +161,7 @@ const CommentModal: React.FC<CommentModalProps> = ({ post: initialPost, onClose,
           <div style={{ marginTop: '10px', padding: '10px', backgroundColor: post.status_tag === 'end_trade' ? '#e9ecef' : '#f5f5f5' }}>
             <div>작성자: {postWriter?.company_name} ({postWriter?.first_name} {postWriter?.last_name})</div>
             <div>수량 / 예약 중 수량 / 잔여 수량: {post.quantity.toLocaleString()} / {reservedQuantity.toLocaleString()} / {remainingQuantity.toLocaleString()}</div>
-            <div>단가: ${post.price_per_unit.toLocaleString()}</div>
+            <div>단가: {post.status_tag === 'end_trade' ? '***' : `$${post.price_per_unit.toLocaleString()}`}</div>
             <div>등록 날짜: {formatDate(post.created_at)}</div>
             <div>상태: {post.status_tag || '대기'}</div>
           </div>
@@ -158,8 +183,30 @@ const CommentModal: React.FC<CommentModalProps> = ({ post: initialPost, onClose,
         {user && post.status_tag !== 'end_trade' && (
           <form onSubmit={handleSubmit} style={{ borderTop: '1px solid #ccc', paddingTop: '20px' }}>
             <h3>거래 의도 선언</h3>
+            
+            {post.type === 'buy' && (
+              <div style={{ marginBottom: '15px' }}>
+                <label style={{ display: 'block', marginBottom: '5px' }}>제안 가격</label>
+                <input
+                  type="text"
+                  value={formatQuantity(offeredPrice)}
+                  onChange={handlePriceChange}
+                  required
+                  style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }}
+                  placeholder="제안 가격을 입력하세요"
+                />
+                {offeredPrice && !isNaN(parseFloat(offeredPrice.replace(/,/g, ''))) && parseFloat(offeredPrice.replace(/,/g, '')) > 0 && post.status_tag !== 'end_trade' && (
+                  <div style={{ marginTop: '5px', color: '#666', fontSize: '14px' }}>
+                    게시글 가격: ${post.price_per_unit.toLocaleString()}
+                  </div>
+                )}
+              </div>
+            )}
+            
             <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px' }}>선언 수량</label>
+              <label style={{ display: 'block', marginBottom: '5px' }}>
+                {post.type === 'sell' ? '선언 수량' : '수량'}
+              </label>
               <input
                 type="text"
                 value={formatQuantity(declaredQuantity)}
@@ -168,9 +215,14 @@ const CommentModal: React.FC<CommentModalProps> = ({ post: initialPost, onClose,
                 style={{ width: '100%', padding: '8px', border: '1px solid #ccc' }}
                 placeholder="수량을 입력하세요"
               />
-              {declaredQuantity && !isNaN(parseFloat(declaredQuantity.replace(/,/g, ''))) && parseFloat(declaredQuantity.replace(/,/g, '')) > 0 && (
+              {post.type === 'sell' && declaredQuantity && !isNaN(parseFloat(declaredQuantity.replace(/,/g, ''))) && parseFloat(declaredQuantity.replace(/,/g, '')) > 0 && (
                 <div style={{ marginTop: '5px', color: '#666', fontSize: '14px' }}>
                   총 단가: ${(parseFloat(declaredQuantity.replace(/,/g, '')) * post.price_per_unit).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </div>
+              )}
+              {post.type === 'buy' && offeredPrice && declaredQuantity && !isNaN(parseFloat(offeredPrice.replace(/,/g, ''))) && !isNaN(parseFloat(declaredQuantity.replace(/,/g, ''))) && parseFloat(offeredPrice.replace(/,/g, '')) > 0 && parseFloat(declaredQuantity.replace(/,/g, '')) > 0 && (
+                <div style={{ marginTop: '5px', color: '#666', fontSize: '14px' }}>
+                  총 단가: ${(parseFloat(declaredQuantity.replace(/,/g, '')) * parseFloat(offeredPrice.replace(/,/g, ''))).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </div>
               )}
             </div>

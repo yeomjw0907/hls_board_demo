@@ -17,14 +17,19 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, post, isPostWriter, 
   const isSuperAdmin = user?.role === 'super_admin';
   const canViewContent = isPostWriter || isSuperAdmin;
   const remainingQuantity = calculateRemainingQuantity(post.id);
-  const canAccept = comment.declared_quantity <= remainingQuantity;
+  const canAccept = post.type === 'sell' 
+    ? comment.declared_quantity <= remainingQuantity
+    : comment.offered_price !== undefined;
 
   const handleAccept = () => {
-    // 잔여 수량 체크
-    if (comment.declared_quantity > remainingQuantity) {
-      alert(`잔여 수량(${remainingQuantity.toLocaleString()})보다 큰 수량(${comment.declared_quantity.toLocaleString()})은 수락할 수 없습니다.\n남은 수량만큼만 수락하거나, 거래를 거절하고 새로운 게시글을 작성하세요.`);
-      return;
+    // SELL 게시글: 잔여 수량 체크
+    if (post.type === 'sell') {
+      if (comment.declared_quantity > remainingQuantity) {
+        alert(`잔여 수량(${remainingQuantity.toLocaleString()})보다 큰 수량(${comment.declared_quantity.toLocaleString()})은 수락할 수 없습니다.\n남은 수량만큼만 수락하거나, 거래를 거절하고 새로운 게시글을 작성하세요.`);
+        return;
+      }
     }
+    
 
     if (window.confirm('거래를 수락하시겠습니까?')) {
       updateComment(comment.id, { comment_tag: 'in_trade' });
@@ -66,6 +71,9 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, post, isPostWriter, 
           {comment.comment_tag && ` [${comment.comment_tag}]`}
         </div>
         <div>선언 수량: {comment.declared_quantity.toLocaleString()}</div>
+        {comment.offered_price !== undefined && post.status_tag !== 'end_trade' && (
+          <div>제안 가격: ${comment.offered_price.toLocaleString()}</div>
+        )}
         {canViewContent && <div>{comment.text}</div>}
       </div>
       
@@ -74,7 +82,9 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, post, isPostWriter, 
           <>
             {!canAccept && (
               <div style={{ color: '#dc3545', fontSize: '12px', marginRight: '10px' }}>
-                잔여 수량({remainingQuantity.toLocaleString()})보다 큼
+                {post.type === 'sell' 
+                  ? `잔여 수량(${remainingQuantity.toLocaleString()})보다 큼`
+                  : '제안 가격이 없음'}
               </div>
             )}
             <button

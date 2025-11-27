@@ -35,11 +35,12 @@ export const getPostById = (id: string): Post | undefined => {
   return posts.find(post => post.id === id);
 };
 
-export const createPost = (carrierId: string, quantity: number, pricePerUnit: number): Post => {
+export const createPost = (carrierId: string, type: 'buy' | 'sell', quantity: number, pricePerUnit: number): Post => {
   const newPost: Post = {
     id: `post_${Date.now()}`,
     post_number: postNumberCounter++,
     carrier_id: carrierId,
+    type,
     quantity,
     price_per_unit: pricePerUnit,
     status_tag: '',
@@ -72,13 +73,15 @@ export const createComment = (
   postId: string,
   carrierId: string,
   declaredQuantity: number,
-  text: string
+  text: string,
+  offeredPrice?: number
 ): Comment => {
   const newComment: Comment = {
     id: `comment_${Date.now()}`,
     post_id: postId,
     carrier_id: carrierId,
     declared_quantity: declaredQuantity,
+    offered_price: offeredPrice,
     text,
     comment_tag: '',
     created_at: Date.now(),

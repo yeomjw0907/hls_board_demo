@@ -2,6 +2,7 @@ export type UserRole = 'carrier_user' | 'buyer_user' | 'super_admin';
 
 export type PostTag = '' | 'reserved' | 'in_trade' | 'end_trade' | 'canceled';
 export type CommentTag = '' | 'in_trade' | 'rejected';
+export type PostType = 'buy' | 'sell';
 
 export interface Carrier {
   id: string;
@@ -19,6 +20,7 @@ export interface Post {
   id: string;
   post_number: number;
   carrier_id: string;
+  type: PostType;
   quantity: number;
   price_per_unit: number;
   status_tag: PostTag;
@@ -30,6 +32,7 @@ export interface Comment {
   post_id: string;
   carrier_id: string;
   declared_quantity: number;
+  offered_price?: number;
   text: string;
   comment_tag: CommentTag;
   created_at: number;

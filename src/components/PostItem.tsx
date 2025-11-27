@@ -60,12 +60,22 @@ const PostItem: React.FC<PostItemProps> = ({ post, onClick, onUpdate }) => {
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
         <div style={{ flex: 1 }}>
-          <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>
+          <div style={{ fontWeight: 'bold', marginBottom: '5px', display: 'flex', gap: '10px', alignItems: 'center' }}>
+            <span style={{ 
+              padding: '3px 8px', 
+              backgroundColor: post.type === 'buy' ? '#007bff' : '#28a745', 
+              color: 'white', 
+              borderRadius: '4px',
+              fontSize: '12px',
+              fontWeight: 'bold'
+            }}>
+              {post.type === 'buy' ? '[BUY]' : '[SELL]'}
+            </span>
             {post.status_tag && `[${post.status_tag}]`}
           </div>
           <div>작성자: {postWriter?.company_name} ({postWriter?.first_name} {postWriter?.last_name})</div>
           <div>수량 / 예약 중 수량 / 잔여 수량: {post.quantity.toLocaleString()} / {reservedQuantity.toLocaleString()} / {remainingQuantity.toLocaleString()}</div>
-          <div>단가: ${post.price_per_unit.toLocaleString()}</div>
+          <div>단가: {post.status_tag === 'end_trade' ? '***' : `$${post.price_per_unit.toLocaleString()}`}</div>
           <div>등록 날짜: {formatDate(post.created_at)}</div>
         </div>
         {(isPostWriter || isSuperAdmin) && (

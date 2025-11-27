@@ -9,6 +9,7 @@ interface PostModalProps {
 
 const PostModal: React.FC<PostModalProps> = ({ onClose, onSuccess }) => {
   const { user } = useAuth();
+  const [postType, setPostType] = useState<'buy' | 'sell'>('sell');
   const [quantity, setQuantity] = useState('');
   const [pricePerUnit, setPricePerUnit] = useState('');
 
@@ -55,7 +56,7 @@ const PostModal: React.FC<PostModalProps> = ({ onClose, onSuccess }) => {
       return;
     }
 
-    createPost(user.id, qty, price);
+    createPost(user.id, postType, qty, price);
     onSuccess();
   };
 
@@ -87,6 +88,31 @@ const PostModal: React.FC<PostModalProps> = ({ onClose, onSuccess }) => {
       >
         <h2 style={{ marginBottom: '20px' }}>게시글 작성</h2>
         <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom: '15px' }}>
+            <label style={{ display: 'block', marginBottom: '5px' }}>거래 유형</label>
+            <div style={{ display: 'flex', gap: '15px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                <input
+                  type="radio"
+                  value="sell"
+                  checked={postType === 'sell'}
+                  onChange={(e) => setPostType(e.target.value as 'buy' | 'sell')}
+                  style={{ marginRight: '5px' }}
+                />
+                판매 (Sell)
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                <input
+                  type="radio"
+                  value="buy"
+                  checked={postType === 'buy'}
+                  onChange={(e) => setPostType(e.target.value as 'buy' | 'sell')}
+                  style={{ marginRight: '5px' }}
+                />
+                구매 (Buy)
+              </label>
+            </div>
+          </div>
           <div style={{ marginBottom: '15px' }}>
             <label style={{ display: 'block', marginBottom: '5px' }}>수량</label>
             <input
