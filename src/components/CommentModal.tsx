@@ -16,7 +16,7 @@ const CommentModal: React.FC<CommentModalProps> = ({ post: initialPost, onClose,
   const [declaredQuantity, setDeclaredQuantity] = useState('');
   const [offeredPrice, setOfferedPrice] = useState('');
   const [text, setText] = useState('');
-  const [post, setPost] = useState<Post>(initialPost as Post);
+  const [post, setPost] = useState<Post>(initialPost);
 
   useEffect(() => {
     loadComments();
@@ -31,7 +31,7 @@ const CommentModal: React.FC<CommentModalProps> = ({ post: initialPost, onClose,
   const loadPost = () => {
     const updatedPost = getPostById(post.id);
     if (updatedPost) {
-      setPost(updatedPost as Post);
+      setPost(updatedPost);
     }
   };
 
